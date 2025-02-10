@@ -4,6 +4,7 @@ package provider
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	tfTypes "github.com/speakeasy/terraform-provider-terraform/internal/provider/types"
 	"github.com/speakeasy/terraform-provider-terraform/internal/sdk/models/shared"
 )
 
@@ -20,16 +21,79 @@ func (r *ConnectionResourceModel) ToSharedConnectionCreateRequest() *shared.Conn
 	var destinationID string
 	destinationID = r.DestinationID.ValueString()
 
+	var configurations *shared.StreamConfigurations
+	if r.Configurations != nil {
+		var streams []shared.StreamConfiguration = []shared.StreamConfiguration{}
+		for _, streamsItem := range r.Configurations.Streams {
+			var name1 string
+			name1 = streamsItem.Name.ValueString()
+
+			var cursorField []string = []string{}
+			for _, cursorFieldItem := range streamsItem.CursorField {
+				cursorField = append(cursorField, cursorFieldItem.ValueString())
+			}
+			var primaryKey [][]string = [][]string{}
+			for _, primaryKeyItem := range streamsItem.PrimaryKey {
+				var primaryKeyTmp []string = []string{}
+				for _, item := range primaryKeyItem {
+					primaryKeyTmp = append(primaryKeyTmp, item.ValueString())
+				}
+				primaryKey = append(primaryKey, primaryKeyTmp)
+			}
+			streams = append(streams, shared.StreamConfiguration{
+				Name:        name1,
+				CursorField: cursorField,
+				PrimaryKey:  primaryKey,
+			})
+		}
+		configurations = &shared.StreamConfigurations{
+			Streams: streams,
+		}
+	}
 	out := shared.ConnectionCreateRequest{
-		Name:          name,
-		SourceID:      sourceID,
-		DestinationID: destinationID,
+		Name:           name,
+		SourceID:       sourceID,
+		DestinationID:  destinationID,
+		Configurations: configurations,
 	}
 	return &out
 }
 
 func (r *ConnectionResourceModel) RefreshFromSharedConnectionResponse(resp *shared.ConnectionResponse) {
 	if resp != nil {
+		if resp.Configurations == nil {
+			r.Configurations = nil
+		} else {
+			r.Configurations = &tfTypes.StreamConfigurations{}
+			r.Configurations.Streams = []tfTypes.StreamConfiguration{}
+			if len(r.Configurations.Streams) > len(resp.Configurations.Streams) {
+				r.Configurations.Streams = r.Configurations.Streams[:len(resp.Configurations.Streams)]
+			}
+			for streamsCount, streamsItem := range resp.Configurations.Streams {
+				var streams1 tfTypes.StreamConfiguration
+				streams1.CursorField = make([]types.String, 0, len(streamsItem.CursorField))
+				for _, v := range streamsItem.CursorField {
+					streams1.CursorField = append(streams1.CursorField, types.StringValue(v))
+				}
+				streams1.Name = types.StringValue(streamsItem.Name)
+				streams1.PrimaryKey = nil
+				for _, primaryKeyItem := range streamsItem.PrimaryKey {
+					var primaryKey1 []types.String
+					primaryKey1 = make([]types.String, 0, len(primaryKeyItem))
+					for _, v := range primaryKeyItem {
+						primaryKey1 = append(primaryKey1, types.StringValue(v))
+					}
+					streams1.PrimaryKey = append(streams1.PrimaryKey, primaryKey1)
+				}
+				if streamsCount+1 > len(r.Configurations.Streams) {
+					r.Configurations.Streams = append(r.Configurations.Streams, streams1)
+				} else {
+					r.Configurations.Streams[streamsCount].CursorField = streams1.CursorField
+					r.Configurations.Streams[streamsCount].Name = streams1.Name
+					r.Configurations.Streams[streamsCount].PrimaryKey = streams1.PrimaryKey
+				}
+			}
+		}
 		r.ConnectionID = types.StringValue(resp.ConnectionID)
 		r.CreatedAt = types.Int64Value(resp.CreatedAt)
 		r.DestinationID = types.StringValue(resp.DestinationID)

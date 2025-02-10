@@ -1,7 +1,7 @@
 lockVersion: 2.0.0
-id: ec0c879e-aea8-4978-a7d3-92dc130b1964
+id: 91873a4b-52ef-47a6-af65-bfc3b116d712
 management:
-  docChecksum: 13ae87b5624056ea03f68d33405cd09f
+  docChecksum: 693ea5006b535b36def48d7d7a16a49c
   docVersion: 1.0.0
   speakeasyVersion: 1.484.1
   generationVersion: 2.503.2
@@ -54,6 +54,8 @@ generatedFiles:
   - internal/provider/reflect/primitive.go
   - internal/provider/reflect/slice.go
   - internal/provider/reflect/struct.go
+  - internal/provider/types/stream_configuration.go
+  - internal/provider/types/stream_configurations.go
   - internal/provider/utils.go
   - internal/sdk/.gitattributes
   - internal/sdk/connections.go
@@ -80,6 +82,8 @@ generatedFiles:
   - internal/sdk/models/shared/connectionpatchrequest.go
   - internal/sdk/models/shared/connectionresponse.go
   - internal/sdk/models/shared/connectionsresponse.go
+  - internal/sdk/models/shared/streamconfiguration.go
+  - internal/sdk/models/shared/streamconfigurations.go
   - internal/sdk/retry/config.go
   - internal/sdk/sdk.go
   - internal/sdk/types/bigint.go

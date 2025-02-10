@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	tfTypes "github.com/speakeasy/terraform-provider-terraform/internal/provider/types"
 	"github.com/speakeasy/terraform-provider-terraform/internal/sdk"
 	"github.com/speakeasy/terraform-provider-terraform/internal/sdk/models/operations"
 )
@@ -28,12 +29,13 @@ type ConnectionDataSource struct {
 
 // ConnectionDataSourceModel describes the data model.
 type ConnectionDataSourceModel struct {
-	ConnectionID  types.String `tfsdk:"connection_id"`
-	CreatedAt     types.Int64  `tfsdk:"created_at"`
-	DestinationID types.String `tfsdk:"destination_id"`
-	Name          types.String `tfsdk:"name"`
-	SourceID      types.String `tfsdk:"source_id"`
-	WorkspaceID   types.String `tfsdk:"workspace_id"`
+	Configurations *tfTypes.StreamConfigurations `tfsdk:"configurations"`
+	ConnectionID   types.String                  `tfsdk:"connection_id"`
+	CreatedAt      types.Int64                   `tfsdk:"created_at"`
+	DestinationID  types.String                  `tfsdk:"destination_id"`
+	Name           types.String                  `tfsdk:"name"`
+	SourceID       types.String                  `tfsdk:"source_id"`
+	WorkspaceID    types.String                  `tfsdk:"workspace_id"`
 }
 
 // Metadata returns the data source type name.
@@ -47,6 +49,32 @@ func (r *ConnectionDataSource) Schema(ctx context.Context, req datasource.Schema
 		MarkdownDescription: "Connection DataSource",
 
 		Attributes: map[string]schema.Attribute{
+			"configurations": schema.SingleNestedAttribute{
+				Computed: true,
+				Attributes: map[string]schema.Attribute{
+					"streams": schema.ListNestedAttribute{
+						Computed: true,
+						NestedObject: schema.NestedAttributeObject{
+							Attributes: map[string]schema.Attribute{
+								"cursor_field": schema.ListAttribute{
+									Computed:    true,
+									ElementType: types.StringType,
+								},
+								"name": schema.StringAttribute{
+									Computed: true,
+								},
+								"primary_key": schema.ListNestedAttribute{
+									Computed: true,
+									NestedObject: schema.NestedAttributeObject{
+										Attributes: map[string]schema.Attribute{},
+									},
+								},
+							},
+						},
+					},
+				},
+				Description: `A list of configured stream options for a connection.`,
+			},
 			"connection_id": schema.StringAttribute{
 				Required: true,
 			},

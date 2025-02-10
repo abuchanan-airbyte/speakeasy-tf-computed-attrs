@@ -10,6 +10,8 @@ type ConnectionResponse struct {
 	DestinationID string  `json:"destinationId"`
 	WorkspaceID   *string `json:"workspaceId,omitempty"`
 	CreatedAt     int64   `json:"createdAt"`
+	// A list of configured stream options for a connection.
+	Configurations *StreamConfigurations `json:"configurations,omitempty"`
 }
 
 func (o *ConnectionResponse) GetConnectionID() string {
@@ -52,4 +54,11 @@ func (o *ConnectionResponse) GetCreatedAt() int64 {
 		return 0
 	}
 	return o.CreatedAt
+}
+
+func (o *ConnectionResponse) GetConfigurations() *StreamConfigurations {
+	if o == nil {
+		return nil
+	}
+	return o.Configurations
 }

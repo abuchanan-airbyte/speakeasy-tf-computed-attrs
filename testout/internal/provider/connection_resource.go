@@ -8,14 +8,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	speakeasy_int64planmodifier "github.com/speakeasy/terraform-provider-terraform/internal/planmodifiers/int64planmodifier"
+	speakeasy_listplanmodifier "github.com/speakeasy/terraform-provider-terraform/internal/planmodifiers/listplanmodifier"
+	speakeasy_objectplanmodifier "github.com/speakeasy/terraform-provider-terraform/internal/planmodifiers/objectplanmodifier"
 	speakeasy_stringplanmodifier "github.com/speakeasy/terraform-provider-terraform/internal/planmodifiers/stringplanmodifier"
+	tfTypes "github.com/speakeasy/terraform-provider-terraform/internal/provider/types"
 	"github.com/speakeasy/terraform-provider-terraform/internal/sdk"
 	"github.com/speakeasy/terraform-provider-terraform/internal/sdk/models/operations"
+	speakeasy_listvalidators "github.com/speakeasy/terraform-provider-terraform/internal/validators/listvalidators"
+	speakeasy_objectvalidators "github.com/speakeasy/terraform-provider-terraform/internal/validators/objectvalidators"
+	speakeasy_stringvalidators "github.com/speakeasy/terraform-provider-terraform/internal/validators/stringvalidators"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -33,12 +41,13 @@ type ConnectionResource struct {
 
 // ConnectionResourceModel describes the resource data model.
 type ConnectionResourceModel struct {
-	ConnectionID  types.String `tfsdk:"connection_id"`
-	CreatedAt     types.Int64  `tfsdk:"created_at"`
-	DestinationID types.String `tfsdk:"destination_id"`
-	Name          types.String `tfsdk:"name"`
-	SourceID      types.String `tfsdk:"source_id"`
-	WorkspaceID   types.String `tfsdk:"workspace_id"`
+	Configurations *tfTypes.StreamConfigurations `tfsdk:"configurations"`
+	ConnectionID   types.String                  `tfsdk:"connection_id"`
+	CreatedAt      types.Int64                   `tfsdk:"created_at"`
+	DestinationID  types.String                  `tfsdk:"destination_id"`
+	Name           types.String                  `tfsdk:"name"`
+	SourceID       types.String                  `tfsdk:"source_id"`
+	WorkspaceID    types.String                  `tfsdk:"workspace_id"`
 }
 
 func (r *ConnectionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -49,17 +58,83 @@ func (r *ConnectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Connection Resource",
 		Attributes: map[string]schema.Attribute{
+			"configurations": schema.SingleNestedAttribute{
+				Computed: true,
+				Optional: true,
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.RequiresReplaceIfConfigured(),
+					speakeasy_objectplanmodifier.SuppressDiff(speakeasy_objectplanmodifier.ExplicitSuppress),
+				},
+				Attributes: map[string]schema.Attribute{
+					"streams": schema.ListNestedAttribute{
+						Computed: true,
+						Optional: true,
+						PlanModifiers: []planmodifier.List{
+							listplanmodifier.RequiresReplaceIfConfigured(),
+							speakeasy_listplanmodifier.SuppressDiff(speakeasy_listplanmodifier.ExplicitSuppress),
+						},
+						NestedObject: schema.NestedAttributeObject{
+							Validators: []validator.Object{
+								speakeasy_objectvalidators.NotNull(),
+							},
+							PlanModifiers: []planmodifier.Object{
+								objectplanmodifier.RequiresReplaceIfConfigured(),
+								speakeasy_objectplanmodifier.SuppressDiff(speakeasy_objectplanmodifier.ExplicitSuppress),
+							},
+							Attributes: map[string]schema.Attribute{
+								"cursor_field": schema.ListAttribute{
+									Computed: true,
+									Optional: true,
+									PlanModifiers: []planmodifier.List{
+										listplanmodifier.RequiresReplaceIfConfigured(),
+										speakeasy_listplanmodifier.SuppressDiff(speakeasy_listplanmodifier.ExplicitSuppress),
+									},
+									ElementType: types.StringType,
+									Description: `Requires replacement if changed.`,
+								},
+								"name": schema.StringAttribute{
+									Computed: true,
+									Optional: true,
+									PlanModifiers: []planmodifier.String{
+										stringplanmodifier.RequiresReplaceIfConfigured(),
+										speakeasy_stringplanmodifier.SuppressDiff(speakeasy_stringplanmodifier.ExplicitSuppress),
+									},
+									Description: `Not Null; Requires replacement if changed.`,
+									Validators: []validator.String{
+										speakeasy_stringvalidators.NotNull(),
+									},
+								},
+								"primary_key": schema.ListNestedAttribute{
+									Computed: true,
+									Optional: true,
+									PlanModifiers: []planmodifier.List{
+										listplanmodifier.RequiresReplaceIfConfigured(),
+										speakeasy_listplanmodifier.SuppressDiff(speakeasy_listplanmodifier.ExplicitSuppress),
+									},
+									NestedObject: schema.NestedAttributeObject{
+										Validators: []validator.List{
+											speakeasy_listvalidators.NotNull(),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplaceIfConfigured(),
+											speakeasy_listplanmodifier.SuppressDiff(speakeasy_listplanmodifier.ExplicitSuppress),
+										},
+										Attributes: map[string]schema.Attribute{},
+									},
+									Description: `Requires replacement if changed.`,
+								},
+							},
+						},
+						Description: `Requires replacement if changed.`,
+					},
+				},
+				Description: `A list of configured stream options for a connection. Requires replacement if changed.`,
+			},
 			"connection_id": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					speakeasy_stringplanmodifier.SuppressDiff(speakeasy_stringplanmodifier.ExplicitSuppress),
-				},
 			},
 			"created_at": schema.Int64Attribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.Int64{
-					speakeasy_int64planmodifier.SuppressDiff(speakeasy_int64planmodifier.ExplicitSuppress),
-				},
 			},
 			"destination_id": schema.StringAttribute{
 				Required: true,
@@ -70,11 +145,8 @@ func (r *ConnectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: `Requires replacement if changed.`,
 			},
 			"name": schema.StringAttribute{
-				Computed: true,
-				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					speakeasy_stringplanmodifier.SuppressDiff(speakeasy_stringplanmodifier.ExplicitSuppress),
-				},
+				Computed:    true,
+				Optional:    true,
 				Description: `Optional name of the connection`,
 			},
 			"source_id": schema.StringAttribute{
@@ -87,9 +159,6 @@ func (r *ConnectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"workspace_id": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					speakeasy_stringplanmodifier.SuppressDiff(speakeasy_stringplanmodifier.ExplicitSuppress),
-				},
 			},
 		},
 	}

@@ -7,6 +7,8 @@ type ConnectionCreateRequest struct {
 	Name          *string `json:"name,omitempty"`
 	SourceID      string  `json:"sourceId"`
 	DestinationID string  `json:"destinationId"`
+	// A list of configured stream options for a connection.
+	Configurations *StreamConfigurations `json:"configurations,omitempty"`
 }
 
 func (o *ConnectionCreateRequest) GetName() *string {
@@ -28,4 +30,11 @@ func (o *ConnectionCreateRequest) GetDestinationID() string {
 		return ""
 	}
 	return o.DestinationID
+}
+
+func (o *ConnectionCreateRequest) GetConfigurations() *StreamConfigurations {
+	if o == nil {
+		return nil
+	}
+	return o.Configurations
 }

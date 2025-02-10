@@ -86,7 +86,7 @@ paths:
       x-speakeasy-group: "Connections"
       summary: "Delete a Connection"
       x-speakeasy-entity-operation: Connection#delete
-      
+
     parameters:
     - name: "connectionId"
       schema:
@@ -112,9 +112,9 @@ components:
         destinationId:
           format: "uuid"
           type: "string"
+        configurations:
+          $ref: "#/components/schemas/StreamConfigurations"
       x-speakeasy-entity: Connection
-      x-speakeasy-param-suppress-computed-diff: true
-      x-speakeasy-component: true
 
     ConnectionPatchRequest:
       type: "object"
@@ -123,8 +123,6 @@ components:
           description: "Optional name of the connection"
           type: "string"
       x-speakeasy-entity: Connection
-      x-speakeasy-param-suppress-computed-diff: true
-      x-speakeasy-component: true
 
     ConnectionResponse:
       title: "Root Type for ConnectionResponse"
@@ -154,9 +152,9 @@ components:
         createdAt:
           format: "int64"
           type: "integer"
+        configurations:
+          $ref: "#/components/schemas/StreamConfigurations"
       x-speakeasy-entity: Connection
-      x-speakeasy-param-suppress-computed-diff: true
-      x-speakeasy-component: true
 
     ConnectionsResponse:
       title: "Root Type for ConnectionsResponse"
@@ -174,6 +172,32 @@ components:
           items:
             $ref: "#/components/schemas/ConnectionResponse"
           default: []
-      x-speakeasy-component: true
 
+    StreamConfigurations:
+      description: "A list of configured stream options for a connection."
+      type: "object"
+      properties:
+        streams:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/StreamConfiguration"
+
+    StreamConfiguration:
+      description: "Configurations for a single stream."
+      type: "object"
+      required:
+      - "name"
+      properties:
+        name:
+          type: "string"
+        cursorField:
+          type: "array"
+          items:
+            type: "string"
+        primaryKey:
+          type: "array"
+          items:
+            type: "array"
+            items:
+              type: "string"
     
