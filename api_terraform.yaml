@@ -1,0 +1,179 @@
+openapi: "3.1.0"
+info:
+  title: "airbyte-api"
+  version: "1.0.0"
+  description: "Programmatically control Airbyte Cloud, OSS & Enterprise."
+servers:
+- url: "https://api.airbyte.com/v1"
+  description: "Airbyte API v1"
+paths:
+  /connections:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConnectionCreateRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConnectionResponse"
+      operationId: "createConnection"
+      x-speakeasy-alias: "createConnection"
+      x-speakeasy-group: "Connections"
+      summary: "Create a connection"
+      x-speakeasy-entity-operation: Connection#create
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConnectionsResponse"
+      operationId: "listConnections"
+      x-speakeasy-alias: "listConnections"
+      x-speakeasy-group: "Connections"
+      summary: "List connections"
+      x-speakeasy-entity-operation: Connection#list
+
+  /connections/{connectionId}:
+
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConnectionResponse"
+      operationId: "getConnection"
+      x-speakeasy-alias: "getConnection"
+      x-speakeasy-group: "Connections"
+      summary: "Get Connection details"
+      x-speakeasy-entity-operation: Connection#read
+
+    patch:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConnectionPatchRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConnectionResponse"
+      operationId: "patchConnection"
+      x-speakeasy-alias: "patchConnection"
+      x-speakeasy-group: "Connections"
+      summary: "Update Connection details"
+      x-speakeasy-entity-operation: Connection#update
+
+    delete:
+      responses:
+        "2XX":
+          description: "The resource was deleted successfully"
+        "403":
+          description: "Not allowed"
+        "404":
+          description: "Not found"
+      operationId: "deleteConnection"
+      x-speakeasy-alias: "deleteConnection"
+      x-speakeasy-group: "Connections"
+      summary: "Delete a Connection"
+      x-speakeasy-entity-operation: Connection#delete
+      
+    parameters:
+    - name: "connectionId"
+      schema:
+        format: "UUID"
+        type: "string"
+      in: "path"
+      required: true
+
+components:
+  schemas:
+    ConnectionCreateRequest:
+      required:
+      - "sourceId"
+      - "destinationId"
+      type: "object"
+      properties:
+        name:
+          description: "Optional name of the connection"
+          type: "string"
+        sourceId:
+          format: "uuid"
+          type: "string"
+        destinationId:
+          format: "uuid"
+          type: "string"
+      x-speakeasy-entity: Connection
+      x-speakeasy-param-suppress-computed-diff: true
+      x-speakeasy-component: true
+
+    ConnectionPatchRequest:
+      type: "object"
+      properties:
+        name:
+          description: "Optional name of the connection"
+          type: "string"
+      x-speakeasy-entity: Connection
+      x-speakeasy-param-suppress-computed-diff: true
+      x-speakeasy-component: true
+
+    ConnectionResponse:
+      title: "Root Type for ConnectionResponse"
+      description: "Provides details of a single connection."
+      type: "object"
+      required:
+      - "connectionId"
+      - "name"
+      - "sourceId"
+      - "destinationId"
+      - "createdAt"
+      properties:
+        connectionId:
+          format: "UUID"
+          type: "string"
+        name:
+          type: "string"
+        sourceId:
+          format: "UUID"
+          type: "string"
+        destinationId:
+          format: "UUID"
+          type: "string"
+        workspaceId:
+          format: "UUID"
+          type: "string"
+        createdAt:
+          format: "int64"
+          type: "integer"
+      x-speakeasy-entity: Connection
+      x-speakeasy-param-suppress-computed-diff: true
+      x-speakeasy-component: true
+
+    ConnectionsResponse:
+      title: "Root Type for ConnectionsResponse"
+      description: ""
+      required:
+      - "data"
+      type: "object"
+      properties:
+        previous:
+          type: "string"
+        next:
+          type: "string"
+        data:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/ConnectionResponse"
+          default: []
+      x-speakeasy-component: true
+
+    

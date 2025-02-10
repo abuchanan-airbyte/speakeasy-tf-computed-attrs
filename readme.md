@@ -1,0 +1,1 @@
+This reproduces an issue with speakeasy terraform generation where resource schema attributes have `Computed: true` unexpectedly.
